@@ -6,6 +6,7 @@ pipeline {
         APP_NAME = "stock-api-app"
         SONAR_SERVER = "SonarQubeServer" // Jenkins Configure System'deki isim
         DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1" // ICU hatasını önlemek için
+		SONAR_TOKEN = credentials('sonar-token2')
     }
 
     stages {
