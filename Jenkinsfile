@@ -30,22 +30,25 @@ pipeline {
         }
 
         stage('Step 3: SonarQube Analizi') {
-            steps {
-                echo "📊 Kod kalitesi ölçülüyor..."
-                withSonarQubeEnv("${SONAR_SERVER}") {
-                    script {
-                        sh "dotnet tool install --global dotnet-sonarscanner || true"
-                        sh """
-                            dotnet-sonarscanner begin /k:"StockApi" \
-                                /d:sonar.token="${SONAR_TOKEN}" \
-                                /d:sonar.host.url="http://sonarqube:9000"
-                            dotnet build StockApi.csproj -c Release
-                            dotnet-sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
-                        """
-                    }
-                }
-            }
-        }
+			steps {
+				echo "📊 Kod kalitesi ölçülüyor..."
+				// Bu blok, Jenkins ayarlarındaki URL'yi ($SONAR_HOST_URL) otomatik enjekte eder
+				withSonarQubeEnv("${SONAR_SERVER}") {
+					script {
+						sh """
+							# Scanner'ı başlatırken sistemden gelen URL'yi kullanıyoruz
+							dotnet-sonarscanner begin /k:"StockApi" \
+								/d:sonar.token="${SONAR_TOKEN}" \
+								/d:sonar.host.url="${SONAR_HOST_URL}"
+							
+							dotnet build StockApi.csproj -c Release
+							
+							dotnet-sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+						"""
+					}
+				}
+			}
+		}
 
         stage('Step 4: Deploy') {
             steps {
