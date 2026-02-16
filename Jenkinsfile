@@ -19,10 +19,11 @@ pipeline {
 
        stage('Step 2: Testleri Koştur') {
 			steps {
-				echo "🧹 Eski artıklar temizleniyor ve testler başlatılıyor..."
-				// Önce her şeyi temizle, sonra testi koştur
-				sh "dotnet clean"
-				sh "dotnet test StockApi.Tests/StockApi.Tests.csproj --configuration Release"
+				echo "🧹 Paketler Linux için yeniden çözülüyor ve testler başlatılıyor..."
+				// Önce paketleri Linux uyumlu hale getir (Restore)
+				sh "dotnet restore"
+				// Sonra test et
+				sh "dotnet test StockApi.Tests/StockApi.Tests.csproj --no-restore"
 			}
 		}
 
