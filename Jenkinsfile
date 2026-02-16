@@ -17,13 +17,14 @@ pipeline {
             }
         }
 
-        stage('Step 2: Testleri Koştur') {
-            steps {
-                echo "🧪 Birim testler başlatılıyor..."
-                // Test projesini açıkça belirtiyoruz
-                sh "dotnet test StockApi.Tests/StockApi.Tests.csproj"
-            }
-        }
+       stage('Step 2: Testleri Koştur') {
+			steps {
+				echo "🧹 Eski artıklar temizleniyor ve testler başlatılıyor..."
+				// Önce her şeyi temizle, sonra testi koştur
+				sh "dotnet clean"
+				sh "dotnet test StockApi.Tests/StockApi.Tests.csproj --configuration Release"
+			}
+		}
 
         stage('Step 3: SonarQube Analizi') {
             steps {
