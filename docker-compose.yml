@@ -1,5 +1,4 @@
 services:
-  # Senin API Uygulaman
   stock-api-service:
     build: .
     container_name: stock-api-container
@@ -9,17 +8,6 @@ services:
       - devops-net
     restart: always
 
-  # SonarQube Paneli
-  sonarqube:
-    image: sonarqube:lts-community
-    container_name: sonarqube
-    ports:
-      - "9000:9000"
-    environment:
-      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
-    networks:
-      - devops-net
-
 networks:
   devops-net:
-    driver: bridge
+    external: true # Dışarıda oluşturduğumuz ağı kullanacak

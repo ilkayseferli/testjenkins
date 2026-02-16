@@ -1,17 +1,23 @@
-# 1. Aşama: Derleme (Build)
+# 1. Aşama: Build (SDK)
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-# Proje dosyasını kopyala ve kütüphaneleri indir
+
+# Sadece ana proje dosyasını çek ve restore et
 COPY ["StockApi.csproj", "./"]
 RUN dotnet restore
 
-# Tüm kodları kopyala ve projeyi yayınla (publish)
+# Tüm kodları kopyala
 COPY . .
-RUN dotnet publish -c Release -o /app/publish
 
-# 2. Aşama: Çalıştırma (Runtime)
+# SADECE ana projeyi yayınla (Testlerin karışmasını önler)
+RUN dotnet publish "StockApi.csproj" -c Release -o /app/publish
+
+# 2. Aşama: Runtime (ASP.NET)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
-# Uygulamanın çalışacağı komut
+
+# .NET'in ICU kütüphanesi hatası vermemesi için Invariant Mode (2026 Standartı)
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
 ENTRYPOINT ["dotnet", "StockApi.dll"]
