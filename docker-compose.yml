@@ -1,7 +1,25 @@
 services:
+  # Senin API Uygulaman
   stock-api-service:
     build: .
     container_name: stock-api-container
     ports:
-      - "8085:8080" # Senin bilgisayarında 8085, konteyner içinde 8080
+      - "8085:8080"
+    networks:
+      - devops-net
     restart: always
+
+  # SonarQube Paneli
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    networks:
+      - devops-net
+
+networks:
+  devops-net:
+    driver: bridge
