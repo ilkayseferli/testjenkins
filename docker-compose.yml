@@ -1,0 +1,7 @@
+services:
+  stock-api-service:
+    build: .
+    container_name: stock-api-container
+    ports:
+      - "8085:8080" # Senin bilgisayarında 8085, konteyner içinde 8080
+    restart: always
