@@ -6,8 +6,7 @@ services:
       - "8085:8080"
     networks:
       - devops-net
-    restart: always
 
 networks:
   devops-net:
-    external: true # Dışarıda oluşturduğumuz ağı kullanacak
+    external: true

@@ -3,14 +3,11 @@ pipeline {
 
     environment {
         APP_NAME = "stock-api-app"
-        SONAR_SERVER = "SonarQubeServer"
+        SONAR_SERVER = "SonarQubeServer" // Jenkins Sistem Ayarlarındaki İsim
         DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1"
-        
-        // KRİTİK: .NET Yolu Tanımı
         DOTNET_ROOT = "/opt/dotnet"
         PATH = "${DOTNET_ROOT}:${HOME}/.dotnet/tools:${env.PATH}"
-        
-        SONAR_TOKEN = credentials('sonar-token2') 
+        SONAR_TOKEN = credentials('sonar-token2') // Jenkins Credential ID
     }
 
     stages {
@@ -30,29 +27,26 @@ pipeline {
         }
 
         stage('Step 3: SonarQube Analizi') {
-			steps {
-				echo "📊 Kod kalitesi ölçülüyor..."
-				// Bu blok, Jenkins ayarlarındaki URL'yi ($SONAR_HOST_URL) otomatik enjekte eder
-				withSonarQubeEnv("${SONAR_SERVER}") {
-					script {
-						sh """
-							# Scanner'ı başlatırken sistemden gelen URL'yi kullanıyoruz
-							dotnet-sonarscanner begin /k:"StockApi" \
-								/d:sonar.token="${SONAR_TOKEN}" \
-								/d:sonar.host.url="${SONAR_HOST_URL}"
-							
-							dotnet build StockApi.csproj -c Release
-							
-							dotnet-sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
-						"""
-					}
-				}
-			}
-		}
+            steps {
+                echo "📊 Kod kalitesi ölçülüyor..."
+                withSonarQubeEnv("${SONAR_SERVER}") {
+                    script {
+                        sh "dotnet tool install --global dotnet-sonarscanner || true"
+                        sh """
+                            dotnet-sonarscanner begin /k:"StockApi" \
+                                /d:sonar.token="${SONAR_TOKEN}" \
+                                /d:sonar.host.url="${SONAR_HOST_URL}"
+                            dotnet build StockApi.csproj -c Release
+                            dotnet-sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+                        """
+                    }
+                }
+            }
+        }
 
         stage('Step 4: Deploy') {
             steps {
-                echo "🚀 Docker ile yayına alınıyor..."
+                echo "🐳 Docker ile yayına alınıyor..."
                 sh """
                     docker compose build
                     docker compose down

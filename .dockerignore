@@ -1,7 +1,4 @@
-bin/
-obj/
-StockApi.Tests/
-.git/
+[Bb]in/
+[Oo]bj/
+.vs/
 .vscode/
-Jenkinsfile
-docker-compose.yml
