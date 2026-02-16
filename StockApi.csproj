@@ -9,5 +9,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
   </ItemGroup>
-
+<ItemGroup>
+  <Compile Remove="StockApi.Tests\**" />
+  <EmbeddedResource Remove="StockApi.Tests\**" />
+  <None Remove="StockApi.Tests\**" />
+</ItemGroup>
 </Project>
