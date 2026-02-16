@@ -2,51 +2,57 @@ pipeline {
     agent any
 
     environment {
-        // Global Ayarlar
         APP_NAME = "stock-api-app"
-        SONAR_SERVER = "SonarQubeServer" // Jenkins Configure System'deki isim
-        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1" // ICU hatasını önlemek için
-		SONAR_TOKEN = credentials('sonar-token2')
+        SONAR_SERVER = "SonarQubeServer"
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1"
+        
+        // .NET'in kurulu olduğu ana dizin
+        DOTNET_ROOT = "/opt/dotnet"
+        // PATH'e hem .NET'i hem de Scanner araçlarını ekliyoruz
+        PATH = "${DOTNET_ROOT}:${HOME}/.dotnet/tools:${env.PATH}"
+        
+        // Jenkins Credentials ID'nin 'sonar-token2' olduğundan emin ol!
+        SONAR_TOKEN = credentials('sonar-token2') 
     }
 
     stages {
         stage('Step 1: Hazırlık') {
             steps {
-                echo "📦 Kodlar çekiliyor ve sistem kontrol ediliyor..."
+                echo "📦 Kodlar çekiliyor..."
                 checkout scm
             }
         }
 
-       stage('Step 2: Testleri Koştur') {
-			steps {
-				echo "🧹 Paketler Linux için yeniden çözülüyor ve testler başlatılıyor..."
-				// Önce paketleri Linux uyumlu hale getir (Restore)
-				sh "dotnet restore"
-				// Sonra test et
-				sh "dotnet test StockApi.Tests/StockApi.Tests.csproj --no-restore"
-			}
-		}
+        stage('Step 2: Testleri Koştur') {
+            steps {
+                echo "🧪 Testler başlatılıyor..."
+                sh """
+                    dotnet restore
+                    dotnet test StockApi.Tests/StockApi.Tests.csproj --no-restore
+                """
+            }
+        }
 
         stage('Step 3: SonarQube Analizi') {
             steps {
-                echo "📊 Kod kalitesi analizi yapılıyor..."
+                echo "📊 SonarQube taraması yapılıyor..."
                 withSonarQubeEnv("${SONAR_SERVER}") {
                     script {
+                        // 'sh' içinde değişkenlerin kaybolmaması için tek blokta yazıyoruz
                         sh """
-                        # Scanner yüklü değilse yükle
-                        dotnet tool install --global dotnet-sonarscanner || true
-                        export PATH="\$PATH:\$HOME/.dotnet/tools"
-                        
-                        # Analizi Başlat
-                        dotnet-sonarscanner begin /k:"StockApi" \
-                            /d:sonar.token="${SONAR_TOKEN}" \
-                            /d:sonar.host.url="http://sonarqube:9000"
-                        
-                        # Analiz için Build şart
-                        dotnet build StockApi.csproj
-                        
-                        # Analizi Bitir ve Raporu Gönder
-                        dotnet-sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+                            # Scanner yüklü mü bak, yoksa kur
+                            dotnet tool install --global dotnet-sonarscanner || true
+                            
+                            # Analizi Başlat
+                            dotnet-sonarscanner begin /k:"StockApi" \
+                                /d:sonar.token="${SONAR_TOKEN}" \
+                                /d:sonar.host.url="http://sonarqube:9000"
+                            
+                            # Analiz için Build şart (Release modunda yapmak daha iyidir)
+                            dotnet build StockApi.csproj -c Release
+                            
+                            # Analizi Bitir ve Gönder
+                            dotnet-sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
                         """
                     }
                 }
@@ -55,20 +61,22 @@ pipeline {
 
         stage('Step 4: Docker Build & Deploy') {
             steps {
-                echo "🚀 Uygulama yayına alınıyor..."
-                sh "docker compose build"
-                sh "docker compose down"
-                sh "docker compose up -d"
+                echo "🐳 Docker işlemleri başlatılıyor..."
+                sh """
+                    docker compose build
+                    docker compose down
+                    docker compose up -d
+                """
             }
         }
     }
 
     post {
         success {
-            echo "✅ Tebrikler Yakli! Uygulama 8085'te, Rapor 9000 portunda yayında! 🚀"
+            echo "✅ Mükemmel Yakli! Her şey yeşil. 🚀"
         }
         failure {
-            echo "❌ Pipeline durduruldu. Lütfen hataları kontrol et!"
+            echo "❌ Bir hata oluştu, logları kontrol et Yakli!"
         }
     }
 }
